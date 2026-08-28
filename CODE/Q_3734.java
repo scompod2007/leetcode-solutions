@@ -1,0 +1,93 @@
+class Solution {
+    public String lexPalindromicPermutation(String s, String target) {
+        int n = s.length();
+        // Special case: single character
+        if (n == 1) {
+            return s.compareTo(target) > 0 ? s : "";
+        }
+        // Count frequency of each character
+        int[] count = new int[26];
+        for (char ch : s.toCharArray()) {
+            count[ch - 'a']++;
+        }
+        // Check whether a palindrome can be formed.
+        // At most one character can have an odd frequency.
+        String middleChar = "";
+        for (int i = 0; i < 26; i++) {
+            if (count[i] % 2 == 1) {
+                // More than one odd-frequency character
+                // means a palindrome cannot be formed.
+                if (!middleChar.isEmpty()) {
+                    return "";
+                }
+                middleChar = String.valueOf((char) ('a' + i));
+            }
+            // Only half of each character is needed
+            // to construct the left half of the palindrome.
+            count[i] /= 2;
+        }
+
+        StringBuilder prefix = new StringBuilder();
+        // Build the left half greedily.
+        for (int position = 0; position < n / 2; position++) {
+            boolean found = false;
+            // Try every character from smallest to largest.
+            for (int charIndex = 0; charIndex < 26; charIndex++) {
+                if (count[charIndex] == 0) {
+                    continue;
+                }
+                char currentChar = (char) ('a' + charIndex);
+                // Temporarily use this character.
+                count[charIndex]--;
+                // Check whether using this character can produce
+                // a palindrome greater than target.
+                if (check(prefix.toString(), currentChar, count, middleChar, target)) {
+                    prefix.append(currentChar);
+                    found = true;
+                    break;
+                } else {
+                    // Undo the choice if it does not work.
+                    count[charIndex]++;
+                }
+            }
+            // No character can be chosen at this position.
+            if (!found) {
+                return "";
+            }
+            
+            // If the current prefix is already greater than
+            // the corresponding prefix of target, we can fill
+            // the remaining positions with the smallest characters.
+            if (prefix.charAt(position) > target.charAt(position)) {
+                StringBuilder leftHalf = new StringBuilder(prefix);
+                for (int charIndex = 0; charIndex < 26; charIndex++) {
+                    for (int frequency = 0; frequency < count[charIndex]; frequency++) {
+                        leftHalf.append((char) ('a' + charIndex));
+                    }
+                }
+                return leftHalf.toString() + middleChar + new StringBuilder(leftHalf).reverse();
+            }
+        }
+
+        // The complete left half was constructed.
+        // Build the final palindrome.
+        return prefix.toString() + middleChar + new StringBuilder(prefix).reverse();
+    }
+
+    private boolean check( String prefix, char currentChar,int[] count, String middleChar,  String target) {
+        // Start with the prefix and the character we are testing.
+        StringBuilder leftHalf = new StringBuilder(prefix);
+        leftHalf.append(currentChar);
+        // Fill the remaining left-half positions
+        // in descending order.
+        for (int charIndex = 25; charIndex >= 0; charIndex--) {
+            for (int frequency = 0; frequency < count[charIndex]; frequency++) {
+                leftHalf.append((char) ('a' + charIndex));
+            }
+        }
+        // Construct the complete palindrome.
+        String palindrome = leftHalf.toString()   + middleChar + new StringBuilder(leftHalf).reverse();
+        // Check whether it is strictly greater than target.
+        return palindrome.compareTo(target) > 0;
+    }
+}

@@ -1,0 +1,24 @@
+from math import comb
+from typing import List
+
+class Solution:
+    def numOfWays(self, nums: List[int]) -> int:
+        MOD = 10**9 + 7
+        
+        def dfs(arr: List[int]) -> int:
+            if len(arr) <= 2:
+                return 1
+            
+            # The first element is always the root of the current subtree
+            root = arr[0]
+            
+            # Partition the remaining elements into left and right subtrees
+            left = [x for x in arr[1:] if x < root]
+            right = [x for x in arr[1:] if x > root]
+            
+            # Number of ways to interleave left and right elements is comb(len(left) + len(right), len(left))
+            # Multiply this by the recursive structural combinations of both subtrees
+            return (comb(len(left) + len(right), len(left)) * dfs(left) * dfs(right)) % MOD
+
+        # Subtract 1 to exclude the original arrangement itself
+        return (dfs(nums) - 1) % MOD
